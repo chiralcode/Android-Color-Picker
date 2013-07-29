@@ -31,7 +31,10 @@ import android.graphics.RadialGradient;
 import android.graphics.RectF;
 import android.graphics.Shader.TileMode;
 import android.graphics.SweepGradient;
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -273,6 +276,27 @@ public class ColorPicker extends View {
 
     public int getSelectedColor() {
         return selectedColor;
+    }
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Log.d("onSaveInstanceState", "onSaveInstanceState");
+        Bundle state = new Bundle();
+        state.putInt("color", selectedColor);
+        state.putParcelable("super", super.onSaveInstanceState());
+        return state;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        Log.d("onRestoreInstanceState", "onRestoreInstanceState");
+        if (state instanceof Bundle) {
+            Bundle bundle = (Bundle) state;
+            setInitialColor(bundle.getInt("color"));
+            super.onRestoreInstanceState(bundle.getParcelable("super"));
+        } else {
+            super.onRestoreInstanceState(state);
+        }
     }
 
 }

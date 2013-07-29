@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">ColorPicker</string>
+    <string name="app_name">Color Picker</string>
     <string name="button_label">OK</string>
+    <string name="pref_name">Pick a color</string>
+    <string name="pref_summary">DialogPreference with Color Picker.</string>
 
 </resources>

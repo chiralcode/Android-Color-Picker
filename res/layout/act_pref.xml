@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="example_preferences" >
+
+    <com.chiralcode.colorpicker.ColorPickerPreference
+        android:defaultValue="0xffffffff"
+        android:key="color"
+        android:title="@string/pref_name"
+        android:summary="@string/pref_summary" />
+
+</PreferenceScreen>
