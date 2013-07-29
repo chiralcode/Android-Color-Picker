@@ -22,8 +22,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".demo.ColorPickerActivity"></activity>
-        <activity android:name=".demo.PreferencesActivity"></activity>
+        <activity android:name=".demo.ColorPickerActivity" />
+        <activity android:name=".demo.MultiColorPickerActivity" />
+        <activity android:name=".demo.PreferencesActivity" />
     </application>
 
 </manifest>

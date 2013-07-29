@@ -8,20 +8,20 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.chiralcode.colorpicker.ColorPicker;
+import com.chiralcode.colorpicker.MultiColorPicker;
 import com.chiralcode.colorpicker.R;
 
-public class ColorPickerActivity extends Activity {
+public class MultiColorPickerActivity extends Activity {
 
-    private ColorPicker colorPicker;
+    private MultiColorPicker multiColorPicker;
     private Button button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.act_picker);
+        setContentView(R.layout.act_multi_picker);
 
-        colorPicker = (ColorPicker) findViewById(R.id.colorPicker);
+        multiColorPicker = (MultiColorPicker) findViewById(R.id.multiColorPicker);
 
         button = (Button) findViewById(R.id.button);
         button.setOnClickListener(new OnClickListener() {
@@ -29,10 +29,10 @@ public class ColorPickerActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                int color = colorPicker.getColor();
+                int color = multiColorPicker.getColor();
                 String rgbString = "R: " + Color.red(color) + " B: " + Color.blue(color) + " G: " + Color.green(color);
 
-                Toast.makeText(ColorPickerActivity.this, rgbString, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MultiColorPickerActivity.this, rgbString, Toast.LENGTH_SHORT).show();
 
             }
         });

@@ -39,7 +39,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-public class ColorPicker extends View {
+public class MultiColorPicker extends View {
 
     /**
      * Customizable display parameters (in percents)
@@ -48,6 +48,9 @@ public class ColorPicker extends View {
     private final int paramInnerPadding = 5; // distance between value slider wheel and inner color wheel
     private final int paramValueSliderWidth = 10; // width of the value slider
     private final int paramArrowPointerSize = 4; // size of the arrow pointer; set to 0 to hide the pointer
+
+    private final int paramColorCount = 5;
+    private final float paramHueSpreadAngle = 30f; // in degrees
 
     private Paint colorWheelPaint;
     private Paint valueSliderPaint;
@@ -82,18 +85,19 @@ public class ColorPicker extends View {
 
     /** Currently selected color */
     private float[] colorHSV = new float[] { 0f, 0f, 1f };
+    private float[] adjacentHue = new float[paramColorCount];
 
-    public ColorPicker(Context context, AttributeSet attrs, int defStyle) {
+    public MultiColorPicker(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
     }
 
-    public ColorPicker(Context context, AttributeSet attrs) {
+    public MultiColorPicker(Context context, AttributeSet attrs) {
         super(context, attrs);
         init();
     }
 
-    public ColorPicker(Context context) {
+    public MultiColorPicker(Context context) {
         super(context);
         init();
     }
@@ -154,8 +158,19 @@ public class ColorPicker extends View {
 
         // drawing color view
 
-        colorViewPaint.setColor(Color.HSVToColor(colorHSV));
-        canvas.drawPath(colorViewPath, colorViewPaint);
+        int[] segmentColors = getColors();
+        float sweepAngleStep = 180f / paramColorCount;
+        for (int i = 0; i < paramColorCount; i++) {
+
+            colorViewPath.reset();
+            colorViewPath.arcTo(outerWheelRect, 270 - i * sweepAngleStep, -sweepAngleStep);
+            colorViewPath.arcTo(innerWheelRect, 90 + (paramColorCount - i - 1) * sweepAngleStep, sweepAngleStep);
+
+            colorViewPaint.setColor(segmentColors[i]);
+
+            canvas.drawPath(colorViewPath, colorViewPaint);
+
+        }
 
         // drawing value slider
 
@@ -169,16 +184,9 @@ public class ColorPicker extends View {
 
         // drawing color wheel pointer
 
-        float hueAngle = (float) Math.toRadians(colorHSV[0]);
-        int colorPointX = (int) (-Math.cos(hueAngle) * colorHSV[1] * colorWheelRadius) + centerX;
-        int colorPointY = (int) (-Math.sin(hueAngle) * colorHSV[1] * colorWheelRadius) + centerY;
-
-        float pointerRadius = 0.075f * colorWheelRadius;
-        int pointerX = (int) (colorPointX - pointerRadius / 2);
-        int pointerY = (int) (colorPointY - pointerRadius / 2);
-
-        colorPointerCoords.set(pointerX, pointerY, pointerX + pointerRadius, pointerY + pointerRadius);
-        canvas.drawOval(colorPointerCoords, colorPointerPaint);
+        for (int i = 0; i < paramColorCount; i++) {
+            drawColorWheelPointer(canvas, (float) Math.toRadians(adjacentHue[i]));
+        }
 
         // drawing value pointer
 
@@ -196,6 +204,23 @@ public class ColorPicker extends View {
         if (arrowPointerSize > 0) {
             drawPointerArrow(canvas);
         }
+
+    }
+
+    private void drawColorWheelPointer(Canvas canvas, float hueAngle) {
+
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+        int colorPointX = (int) (-Math.cos(hueAngle) * colorHSV[1] * colorWheelRadius) + centerX;
+        int colorPointY = (int) (-Math.sin(hueAngle) * colorHSV[1] * colorWheelRadius) + centerY;
+
+        float pointerRadius = 0.075f * colorWheelRadius;
+        int pointerX = (int) (colorPointX - pointerRadius / 2);
+        int pointerY = (int) (colorPointY - pointerRadius / 2);
+
+        colorPointerCoords.set(pointerX, pointerY, pointerX + pointerRadius, pointerY + pointerRadius);
+        canvas.drawOval(colorPointerCoords, colorPointerPaint);
 
     }
 
@@ -255,9 +280,6 @@ public class ColorPicker extends View {
         gradientRotationMatrix = new Matrix();
         gradientRotationMatrix.preRotate(270, width / 2, height / 2);
 
-        colorViewPath.arcTo(outerWheelRect, 270, -180);
-        colorViewPath.arcTo(innerWheelRect, 90, 180);
-
         valueSliderPath.arcTo(outerWheelRect, 270, 180);
         valueSliderPath.arcTo(innerWheelRect, 90, -180);
 
@@ -308,13 +330,16 @@ public class ColorPicker extends View {
                 colorHSV[0] = (float) (Math.toDegrees(Math.atan2(cy, cx)) + 180f);
                 colorHSV[1] = Math.max(0f, Math.min(1f, (float) (d / colorWheelRadius)));
 
+                updateAdjacentHue();
                 invalidate();
 
             } else if (x >= getWidth() / 2 && d >= innerWheelRadius) {
 
                 colorHSV[2] = (float) Math.max(0, Math.min(1, Math.atan2(cy, cx) / Math.PI + 0.5f));
 
+                updateAdjacentHue();
                 invalidate();
+
             }
 
             return true;
@@ -322,12 +347,35 @@ public class ColorPicker extends View {
         return super.onTouchEvent(event);
     }
 
+    private void updateAdjacentHue() {
+
+        for (int i = 0; i < paramColorCount; i++) {
+            adjacentHue[i] = (colorHSV[0] - paramHueSpreadAngle * (paramColorCount / 2 - i)) % 360.0f;
+            adjacentHue[i] = (adjacentHue[i] < 0) ? adjacentHue[i] + 360f : adjacentHue[i];
+        }
+        adjacentHue[paramColorCount / 2] = colorHSV[0];
+
+    }
+
     public void setColor(int color) {
         Color.colorToHSV(color, colorHSV);
+        updateAdjacentHue();
     }
 
     public int getColor() {
         return Color.HSVToColor(colorHSV);
+    }
+
+    public int[] getColors() {
+        int[] colors = new int[paramColorCount];
+        float[] hsv = new float[3];
+        for (int i = 0; i < paramColorCount; i++) {
+            hsv[0] = adjacentHue[i];
+            hsv[1] = colorHSV[1];
+            hsv[2] = colorHSV[2];
+            colors[i] = Color.HSVToColor(hsv);
+        }
+        return colors;
     }
 
     @Override
@@ -343,6 +391,7 @@ public class ColorPicker extends View {
         if (state instanceof Bundle) {
             Bundle bundle = (Bundle) state;
             colorHSV = bundle.getFloatArray("color");
+            updateAdjacentHue();
             super.onRestoreInstanceState(bundle.getParcelable("super"));
         } else {
             super.onRestoreInstanceState(state);

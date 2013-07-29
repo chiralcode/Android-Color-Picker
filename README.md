@@ -1,9 +1,15 @@
 Color Picker for Android
 ===================================
 
-Easy to use, fully functional color picker for Android devices.
+Easy to use, fully functional color picker with compact design based on HSV color model. Project consists two main classes which can be easily extended and suited to user requirements.
 
-![Screenshot 1](https://github.com/chiralcode/ColorPicker/raw/master/screen1.png) ![Screenshot 2](https://github.com/chiralcode/ColorPicker/raw/master/screen2.png) 
+* ColorPicker.java - basic color picker which allows user to pick a single color
+
+![Screenshot 1](http://www.chiralcode.com/colorpicker/base-screen1.png) ![Screenshot 2](http://www.chiralcode.com/colorpicker/base-screen2.png) ![Screenshot 3](http://www.chiralcode.com/colorpicker/base-screen3.png) 
+
+* MultiColorPicker.java - color picker implementation which allows user to pick multiple colors with adjacent hue value
+
+![Screenshot 1](http://www.chiralcode.com/colorpicker/multi-screen1.png) ![Screenshot 2](http://www.chiralcode.com/colorpicker/multi-screen2.png) ![Screenshot 3](http://www.chiralcode.com/colorpicker/multi-screen3.png) 
 
 Usage
 -----

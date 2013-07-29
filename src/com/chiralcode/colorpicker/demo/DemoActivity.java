@@ -18,8 +18,9 @@ public class DemoActivity extends ListActivity {
     private static final int DEMO_VIEW = 0;
     private static final int DEMO_DIALOG = 1;
     private static final int DEMO_PREFERENCE = 2;
+    private static final int DEMO_MULTI_VIEW = 3;
 
-    private String[] demos = new String[] { "Color picker view", "Color picker dialog", "Color picker preference" };
+    private String[] demos = new String[] { "Color picker view", "Color picker dialog", "Color picker preference", "Multi color picker view" };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +48,10 @@ public class DemoActivity extends ListActivity {
 
         case DEMO_PREFERENCE:
             startActivity(new Intent(this, PreferencesActivity.class));
+            break;
+
+        case DEMO_MULTI_VIEW:
+            startActivity(new Intent(this, MultiColorPickerActivity.class));
             break;
 
         default:

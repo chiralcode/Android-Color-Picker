@@ -53,8 +53,8 @@ public class ColorPickerPreference extends DialogPreference {
     @Override
     protected void onDialogClosed(boolean positiveResult) {
         if (positiveResult && shouldPersist()) {
-            if (callChangeListener(colorPickerView.getSelectedColor())) {
-                selectedColor = colorPickerView.getSelectedColor();
+            if (callChangeListener(colorPickerView.getColor())) {
+                selectedColor = colorPickerView.getColor();
                 persistInt(selectedColor);
             }
         }

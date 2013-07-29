@@ -37,7 +37,7 @@ public class ColorPickerDialog extends AlertDialog {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
             case BUTTON_POSITIVE:
-                int selectedColor = colorPickerView.getSelectedColor();
+                int selectedColor = colorPickerView.getColor();
                 onColorSelectedListener.onColorSelected(selectedColor);
                 break;
             case BUTTON_NEGATIVE:
