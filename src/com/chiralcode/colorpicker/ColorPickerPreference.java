@@ -41,7 +41,7 @@ public class ColorPickerPreference extends DialogPreference {
     @Override
     protected void onBindDialogView(View view) {
         super.onBindDialogView(view);
-        colorPickerView.setInitialColor(selectedColor);
+        colorPickerView.setColor(selectedColor);
     }
 
     @Override

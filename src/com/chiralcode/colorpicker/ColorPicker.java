@@ -16,6 +16,7 @@
 
 package com.chiralcode.colorpicker;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -24,6 +25,7 @@ import android.graphics.Color;
 import android.graphics.ComposeShader;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Paint.Join;
 import android.graphics.Paint.Style;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -34,20 +36,29 @@ import android.graphics.SweepGradient;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 public class ColorPicker extends View {
 
+    /**
+     * Customizable display parameters (in percents)
+     */
+    private final int paramOuterPadding = 2; // outer padding of the whole color picker view
+    private final int paramInnerPadding = 5; // distance between value slider wheel and inner color wheel
+    private final int paramValueSliderWidth = 10; // width of the value slider
+    private final int paramArrowPointerSize = 4; // size of the arrow pointer; set to 0 to hide the pointer
+
     private Paint colorWheelPaint;
     private Paint valueSliderPaint;
+
     private Paint colorViewPaint;
 
     private Paint colorPointerPaint;
     private RectF colorPointerCoords;
 
     private Paint valuePointerPaint;
+    private Paint valuePointerArrowPaint;
 
     private RectF outerWheelRect;
     private RectF innerWheelRect;
@@ -60,6 +71,7 @@ public class ColorPicker extends View {
     private int innerPadding;
     private int outerPadding;
 
+    private int arrowPointerSize;
     private int outerWheelRadius;
     private int innerWheelRadius;
     private int colorWheelRadius;
@@ -93,7 +105,9 @@ public class ColorPicker extends View {
 
         valuePointerPaint = new Paint();
         valuePointerPaint.setStyle(Style.STROKE);
-        valuePointerPaint.setStrokeWidth(4f);
+        valuePointerPaint.setStrokeWidth(2f);
+
+        valuePointerArrowPaint = new Paint();
 
         colorWheelPaint = new Paint();
         colorWheelPaint.setAntiAlias(true);
@@ -123,6 +137,7 @@ public class ColorPicker extends View {
         setMeasuredDimension(size, size);
     }
 
+    @SuppressLint("DrawAllocation")
     @Override
     protected void onDraw(Canvas canvas) {
 
@@ -160,7 +175,7 @@ public class ColorPicker extends View {
 
         // drawing color wheel pointer
 
-        float hueAngle = (float) (selectedColorHSV[0] / 180f * Math.PI);
+        float hueAngle = (float) Math.toRadians(selectedColorHSV[0]);
         int colorPointX = (int) (-Math.cos(hueAngle) * selectedColorHSV[1] * colorWheelRadius) + centerX;
         int colorPointY = (int) (-Math.sin(hueAngle) * selectedColorHSV[1] * colorWheelRadius) + centerY;
 
@@ -175,10 +190,51 @@ public class ColorPicker extends View {
 
         valuePointerPaint.setColor(Color.HSVToColor(new float[] { 0f, 0f, 1f - selectedColorHSV[2] }));
 
-        float valueAngle = (float) ((selectedColorHSV[2] * 180f + 90f) / 180f * Math.PI);
+        double valueAngle = (selectedColorHSV[2] - 0.5f) * Math.PI;
+        float valueAngleX = (float) Math.cos(valueAngle);
+        float valueAngleY = (float) Math.sin(valueAngle);
 
-        canvas.drawLine((float) (-Math.cos(valueAngle) * innerWheelRadius) + centerX, (float) (-Math.sin(valueAngle) * innerWheelRadius) + centerY,
-                (float) (-Math.cos(valueAngle) * outerWheelRadius) + centerX, (float) (-Math.sin(valueAngle) * outerWheelRadius) + centerY, valuePointerPaint);
+        canvas.drawLine(valueAngleX * innerWheelRadius + centerX, valueAngleY * innerWheelRadius + centerY, valueAngleX * outerWheelRadius + centerX,
+                valueAngleY * outerWheelRadius + centerY, valuePointerPaint);
+
+        // drawing pointer arrow
+
+        if (arrowPointerSize > 0) {
+            drawPointerArrow(canvas);
+        }
+
+    }
+
+    private void drawPointerArrow(Canvas canvas) {
+
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+        double tipAngle = (selectedColorHSV[2] - 0.5f) * Math.PI;
+        double leftAngle = tipAngle + Math.PI / 96;
+        double rightAngle = tipAngle - Math.PI / 96;
+
+        double tipAngleX = Math.cos(tipAngle) * outerWheelRadius;
+        double tipAngleY = Math.sin(tipAngle) * outerWheelRadius;
+        double leftAngleX = Math.cos(leftAngle) * (outerWheelRadius + arrowPointerSize);
+        double leftAngleY = Math.sin(leftAngle) * (outerWheelRadius + arrowPointerSize);
+        double rightAngleX = Math.cos(rightAngle) * (outerWheelRadius + arrowPointerSize);
+        double rightAngleY = Math.sin(rightAngle) * (outerWheelRadius + arrowPointerSize);
+
+        path.reset();
+        path.moveTo((float) tipAngleX + centerX, (float) tipAngleY + centerY);
+        path.lineTo((float) leftAngleX + centerX, (float) leftAngleY + centerY);
+        path.lineTo((float) rightAngleX + centerX, (float) rightAngleY + centerY);
+        path.lineTo((float) tipAngleX + centerX, (float) tipAngleY + centerY);
+
+        valuePointerArrowPaint.setColor(selectedColor);
+        valuePointerArrowPaint.setStyle(Style.FILL);
+        canvas.drawPath(path, valuePointerArrowPaint);
+
+        valuePointerArrowPaint.setStyle(Style.STROKE);
+        valuePointerArrowPaint.setStrokeJoin(Join.ROUND);
+        valuePointerArrowPaint.setColor(Color.BLACK);
+        canvas.drawPath(path, valuePointerArrowPaint);
 
     }
 
@@ -188,11 +244,12 @@ public class ColorPicker extends View {
         int centerX = width / 2;
         int centerY = height / 2;
 
-        valueSliderWidth = (int) (0.1f * width);
-        innerPadding = (int) (0.05f * width);
-        outerPadding = (int) (0.05f * width);
+        innerPadding = (int) (paramInnerPadding * width / 100);
+        outerPadding = (int) (paramOuterPadding * width / 100);
+        arrowPointerSize = (int) (paramArrowPointerSize * width / 100);
+        valueSliderWidth = (int) (paramValueSliderWidth * width / 100);
 
-        outerWheelRadius = width / 2 - outerPadding;
+        outerWheelRadius = width / 2 - outerPadding - arrowPointerSize;
         innerWheelRadius = outerWheelRadius - valueSliderWidth;
         colorWheelRadius = innerWheelRadius - innerPadding;
 
@@ -248,7 +305,7 @@ public class ColorPicker extends View {
 
             if (d <= colorWheelRadius) {
 
-                selectedColorHSV[0] = (float) (Math.atan2(cy, cx) / Math.PI * 180f) + 180;
+                selectedColorHSV[0] = (float) (Math.toDegrees(Math.atan2(cy, cx)) + 180f);
                 selectedColorHSV[1] = Math.max(0f, Math.min(1f, (float) (d / colorWheelRadius)));
 
                 selectedColor = Color.HSVToColor(selectedColorHSV);
@@ -257,7 +314,7 @@ public class ColorPicker extends View {
 
             } else if (x >= getWidth() / 2 && d >= innerWheelRadius) {
 
-                selectedColorHSV[2] = (float) Math.max(0, Math.min(1, (Math.atan2(cy, cx) / Math.PI * 180f + 90) / 180));
+                selectedColorHSV[2] = (float) Math.max(0, Math.min(1, Math.atan2(cy, cx) / Math.PI + 0.5f));
 
                 selectedColor = Color.HSVToColor(selectedColorHSV);
 
@@ -269,7 +326,7 @@ public class ColorPicker extends View {
         return super.onTouchEvent(event);
     }
 
-    public void setInitialColor(int color) {
+    public void setColor(int color) {
         this.selectedColor = color;
         Color.colorToHSV(color, selectedColorHSV);
     }
@@ -280,7 +337,6 @@ public class ColorPicker extends View {
 
     @Override
     protected Parcelable onSaveInstanceState() {
-        Log.d("onSaveInstanceState", "onSaveInstanceState");
         Bundle state = new Bundle();
         state.putInt("color", selectedColor);
         state.putParcelable("super", super.onSaveInstanceState());
@@ -289,10 +345,9 @@ public class ColorPicker extends View {
 
     @Override
     protected void onRestoreInstanceState(Parcelable state) {
-        Log.d("onRestoreInstanceState", "onRestoreInstanceState");
         if (state instanceof Bundle) {
             Bundle bundle = (Bundle) state;
-            setInitialColor(bundle.getInt("color"));
+            setColor(bundle.getInt("color"));
             super.onRestoreInstanceState(bundle.getParcelable("super"));
         } else {
             super.onRestoreInstanceState(state);

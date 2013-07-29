@@ -22,7 +22,7 @@ public class ColorPickerDialog extends AlertDialog {
         layoutParams.addRule(RelativeLayout.CENTER_IN_PARENT);
 
         colorPickerView = new ColorPicker(context);
-        colorPickerView.setInitialColor(initialColor);
+        colorPickerView.setColor(initialColor);
 
         relativeLayout.addView(colorPickerView, layoutParams);
 
